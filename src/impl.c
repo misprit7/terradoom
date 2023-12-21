@@ -15,13 +15,13 @@
 
 #ifdef __riscv
 
-#include "polkavm_guest.h"
+/* #include "polkavm_guest.h" */
 
-POLKAVM_IMPORT(void, ext_output_video, long, size_t, size_t);
-POLKAVM_IMPORT(void, ext_output_audio, long, size_t);
-POLKAVM_IMPORT(long, ext_rom_size);
-POLKAVM_IMPORT(void, ext_rom_read, long, size_t, size_t);
-POLKAVM_IMPORT(long, ext_stdout, long, size_t);
+/* POLKAVM_IMPORT(void, ext_output_video, long, size_t, size_t); */
+/* POLKAVM_IMPORT(void, ext_output_audio, long, size_t); */
+/* POLKAVM_IMPORT(long, ext_rom_size); */
+/* POLKAVM_IMPORT(void, ext_rom_read, long, size_t, size_t); */
+/* POLKAVM_IMPORT(long, ext_stdout, long, size_t); */
 
 #endif
 
@@ -34,7 +34,8 @@ __attribute__((noreturn)) void abort(void) {
     fprintf(stderr, "\nabort() called!\n");
     flush_stdio();
 
-    POLKAVM_TRAP();
+    for(;;);
+    /* POLKAVM_TRAP(); */
 }
 
 #define MEMORY_SIZE (16 * 1024 * 1024)
@@ -136,145 +137,149 @@ static long write_dummy(long buffer, size_t length) {
 }
 
 long __syscall3(long n, long a0, long a1, long a2) {
-    switch (n) {
-        case SYS_open:
-        {
-            const char * filename = a0;
-            fprintf(stderr, "\nsys_open: '%s'\n", filename);
-            flush_stdio();
+    fprintf(stderr, "WARN: unhandled syscall(4): %li\n", n);
+    flush_stdio();
 
-            if (!strcmp(filename, "doom1.wad")) {
-                ROM_SIZE = ext_rom_size();
-                fprintf(stderr, "sys_open: fetched rom size: %li\n", ROM_SIZE);
-                flush_stdio();
+    return -ENOSYS;
+    /* switch (n) { */
+    /*     case SYS_open: */
+    /*     { */
+    /*         const char * filename = a0; */
+    /*         fprintf(stderr, "\nsys_open: '%s'\n", filename); */
+    /*         flush_stdio(); */
 
-                return FD_WAD;
-            } else if (!strcmp(filename, "/tmp/doom.mid")) {
-                MIDI_OFFSET = 0;
-                return FD_MIDI;
-            } else if (!strcmp(filename, "./.savegame/temp.dsg")) {
-                return FD_DUMMY;
-            } else {
-                return -ENOENT;
-            }
-        }
-        case SYS_lseek:
-        {
-            long * offset = 0;
-            long * size = 0;
-            if (a0 == FD_WAD) {
-                offset = &ROM_OFFSET;
-                size = &ROM_SIZE;
-            } else if (a0 == FD_MIDI) {
-                offset = &MIDI_OFFSET;
-                size = &MIDI_SIZE;
-            } else if (a0 == FD_DUMMY) {
-                return 0;
-            } else {
-                fprintf(stderr, "WARN: lseek on an unknown FD: %li\n", a0);
-                flush_stdio();
+    /*         if (!strcmp(filename, "doom1.wad")) { */
+    /*             ROM_SIZE = ext_rom_size(); */
+    /*             fprintf(stderr, "sys_open: fetched rom size: %li\n", ROM_SIZE); */
+    /*             flush_stdio(); */
 
-                return -EBADF;
-            }
+    /*             return FD_WAD; */
+    /*         } else if (!strcmp(filename, "/tmp/doom.mid")) { */
+    /*             MIDI_OFFSET = 0; */
+    /*             return FD_MIDI; */
+    /*         } else if (!strcmp(filename, "./.savegame/temp.dsg")) { */
+    /*             return FD_DUMMY; */
+    /*         } else { */
+    /*             return -ENOENT; */
+    /*         } */
+    /*     } */
+    /*     case SYS_lseek: */
+    /*     { */
+    /*         long * offset = 0; */
+    /*         long * size = 0; */
+    /*         if (a0 == FD_WAD) { */
+    /*             offset = &ROM_OFFSET; */
+    /*             size = &ROM_SIZE; */
+    /*         } else if (a0 == FD_MIDI) { */
+    /*             offset = &MIDI_OFFSET; */
+    /*             size = &MIDI_SIZE; */
+    /*         } else if (a0 == FD_DUMMY) { */
+    /*             return 0; */
+    /*         } else { */
+    /*             fprintf(stderr, "WARN: lseek on an unknown FD: %li\n", a0); */
+    /*             flush_stdio(); */
 
-            switch (a2) {
-                case SEEK_SET:
-                    *offset = a1;
-                    break;
-                case SEEK_CUR:
-                    *offset += a1;
-                    break;
-                case SEEK_END:
-                    *offset = *size + a1;
-                    break;
-                default:
-                    return -EINVAL;
-            }
+    /*             return -EBADF; */
+    /*         } */
 
-            return *offset;
-        }
-        case SYS_ioctl:
-        {
-            return -ENOSYS;
-        }
-        case SYS_readv:
-        {
-            long * fd_offset = 0;
-            long * fd_size = 0;
-            if (a0 == FD_WAD) {
-                fd_offset = &ROM_OFFSET;
-                fd_size = &ROM_SIZE;
-            } else if (a0 == FD_MIDI) {
-                fd_offset = &MIDI_OFFSET;
-                fd_size = &MIDI_SIZE;
-            } else if (a0 == FD_DUMMY) {
-                return 0;
-            } else {
-                fprintf(stderr, "WARN: read from an unknown FD: %li\n", a0);
-                flush_stdio();
+    /*         switch (a2) { */
+    /*             case SEEK_SET: */
+    /*                 *offset = a1; */
+    /*                 break; */
+    /*             case SEEK_CUR: */
+    /*                 *offset += a1; */
+    /*                 break; */
+    /*             case SEEK_END: */
+    /*                 *offset = *size + a1; */
+    /*                 break; */
+    /*             default: */
+    /*                 return -EINVAL; */
+    /*         } */
 
-                return -EBADF;
-            }
+    /*         return *offset; */
+    /*     } */
+    /*     case SYS_ioctl: */
+    /*     { */
+    /*         return -ENOSYS; */
+    /*     } */
+    /*     case SYS_readv: */
+    /*     { */
+    /*         long * fd_offset = 0; */
+    /*         long * fd_size = 0; */
+    /*         if (a0 == FD_WAD) { */
+    /*             fd_offset = &ROM_OFFSET; */
+    /*             fd_size = &ROM_SIZE; */
+    /*         } else if (a0 == FD_MIDI) { */
+    /*             fd_offset = &MIDI_OFFSET; */
+    /*             fd_size = &MIDI_SIZE; */
+    /*         } else if (a0 == FD_DUMMY) { */
+    /*             return 0; */
+    /*         } else { */
+    /*             fprintf(stderr, "WARN: read from an unknown FD: %li\n", a0); */
+    /*             flush_stdio(); */
 
-            const struct iovec *iov = (const struct iovec *)a1;
-            long bytes_read = 0;
-            for (long i = 0; i < a2; ++i) {
-                long remaining = *fd_size - *fd_offset;
-                long length = iov[i].iov_len;
-                if (remaining < length) {
-                    length = remaining;
-                }
-                if (length == 0) {
-                    break;
-                }
+    /*             return -EBADF; */
+    /*         } */
 
-                if (a0 == FD_WAD) {
-                    ext_rom_read(iov[i].iov_base, ROM_OFFSET, length);
-                } else {
-                    memcpy(iov[i].iov_base, MIDI + *fd_offset, length);
-                }
-                *fd_offset += length;
-                bytes_read += length;
-            }
+    /*         const struct iovec *iov = (const struct iovec *)a1; */
+    /*         long bytes_read = 0; */
+    /*         for (long i = 0; i < a2; ++i) { */
+    /*             long remaining = *fd_size - *fd_offset; */
+    /*             long length = iov[i].iov_len; */
+    /*             if (remaining < length) { */
+    /*                 length = remaining; */
+    /*             } */
+    /*             if (length == 0) { */
+    /*                 break; */
+    /*             } */
 
-            return bytes_read;
-        }
-        case SYS_writev:
-        {
-            long (*write)(long, size_t) = NULL;
-            if (a0 == FD_STDOUT || a0 == FD_STDERR) {
-                write = ext_stdout;
-            } else if (a0 == FD_MIDI) {
-                write = write_midi;
-            } else if (a0 == FD_DUMMY) {
-                write = write_dummy;
-            } else {
-                fprintf(stderr, "WARN: write into an unknown FD: %li\n", a0);
-                flush_stdio();
+    /*             if (a0 == FD_WAD) { */
+    /*                 ext_rom_read(iov[i].iov_base, ROM_OFFSET, length); */
+    /*             } else { */
+    /*                 memcpy(iov[i].iov_base, MIDI + *fd_offset, length); */
+    /*             } */
+    /*             *fd_offset += length; */
+    /*             bytes_read += length; */
+    /*         } */
 
-                return -EBADF;
-            }
+    /*         return bytes_read; */
+    /*     } */
+    /*     case SYS_writev: */
+    /*     { */
+    /*         long (*write)(long, size_t) = NULL; */
+    /*         if (a0 == FD_STDOUT || a0 == FD_STDERR) { */
+    /*             write = ext_stdout; */
+    /*         } else if (a0 == FD_MIDI) { */
+    /*             write = write_midi; */
+    /*         } else if (a0 == FD_DUMMY) { */
+    /*             write = write_dummy; */
+    /*         } else { */
+    /*             fprintf(stderr, "WARN: write into an unknown FD: %li\n", a0); */
+    /*             flush_stdio(); */
 
-            const struct iovec *iov = (const struct iovec *)a1;
-            long bytes_written = 0;
-            for (long i = 0; i < a2; ++i) {
-                long result = write(iov[i].iov_base, iov[i].iov_len);
-                if (result < 0) {
-                    return result;
-                }
-                bytes_written += result;
-            }
+    /*             return -EBADF; */
+    /*         } */
 
-            return bytes_written;
-        }
-        default:
-        {
-            fprintf(stderr, "WARN: unhandled syscall(3): %li\n", n);
-            flush_stdio();
+    /*         const struct iovec *iov = (const struct iovec *)a1; */
+    /*         long bytes_written = 0; */
+    /*         for (long i = 0; i < a2; ++i) { */
+    /*             long result = write(iov[i].iov_base, iov[i].iov_len); */
+    /*             if (result < 0) { */
+    /*                 return result; */
+    /*             } */
+    /*             bytes_written += result; */
+    /*         } */
 
-            return -ENOSYS;
-        }
-    }
+    /*         return bytes_written; */
+    /*     } */
+    /*     default: */
+    /*     { */
+    /*         fprintf(stderr, "WARN: unhandled syscall(3): %li\n", n); */
+    /*         flush_stdio(); */
+
+    /*         return -ENOSYS; */
+    /*     } */
+    /* } */
 }
 
 long __syscall4(long n, long a0, long a1, long a2, long a3) {
@@ -370,13 +375,13 @@ void doom_get_audio(void * stream, size_t len)
 // NOTE: This *must* be static because Doom accesses these args not only during initialization.
 static char * ARGV[3] = {"./doom", "-iwad", "doom1.wad"};
 
-void ext_initialize() {
-    doomgeneric_Create(3, ARGV);
-}
+/* void ext_initialize() { */
+/*     doomgeneric_Create(3, ARGV); */
+/* } */
 
-void ext_tick(void) {
-    doomgeneric_Tick();
-}
+/* void ext_tick(void) { */
+/*     doomgeneric_Tick(); */
+/* } */
 
 static unsigned char _KEYS[256] = {};
 
@@ -401,9 +406,9 @@ void ext_on_keychange(unsigned char key, unsigned char is_pressed) {
 
 #ifdef __riscv
 
-POLKAVM_EXPORT(void, ext_initialize);
-POLKAVM_EXPORT(void, ext_tick);
-POLKAVM_EXPORT(void, ext_on_keychange, uint8_t, uint8_t);
+/* POLKAVM_EXPORT(void, ext_initialize); */
+/* POLKAVM_EXPORT(void, ext_tick); */
+/* POLKAVM_EXPORT(void, ext_on_keychange, uint8_t, uint8_t); */
 
 #endif
 
@@ -412,7 +417,7 @@ POLKAVM_EXPORT(void, ext_on_keychange, uint8_t, uint8_t);
 void DG_Init(void) {}
 
 void DG_DrawFrame(void) {
-    ext_output_video(DG_ScreenBuffer, DOOMGENERIC_RESX, DOOMGENERIC_RESY);
+    /* ext_output_video(DG_ScreenBuffer, DOOMGENERIC_RESX, DOOMGENERIC_RESY); */
 }
 
 static uint32_t SUBSAMPLES = 0;
@@ -433,7 +438,7 @@ static void pump_audio() {
 
         char audio_buffer[AUDIO_SAMPLES_PER_CHUNK * 4];
         doom_get_audio(audio_buffer, AUDIO_SAMPLES_PER_CHUNK * 4);
-        ext_output_audio(audio_buffer, AUDIO_SAMPLES_PER_CHUNK);
+        /* ext_output_audio(audio_buffer, AUDIO_SAMPLES_PER_CHUNK); */
         SUBSAMPLES_EMITTED += SUBSAMPLES_PER_SAMPLE * AUDIO_SAMPLES_PER_CHUNK;
     }
 }

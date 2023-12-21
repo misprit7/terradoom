@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 __attribute__((noreturn)) void exit(int status) {
     abort();
@@ -58,3 +59,10 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 int pthread_mutex_unlock(pthread_mutex_t *mutex) {
     return 0;
 }
+
+int usleep(useconds_t t){
+    return 0;
+}
+
+
+

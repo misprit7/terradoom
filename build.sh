@@ -3,19 +3,24 @@
 set -euo pipefail
 
 MUSL_ROOT=libs/musl-1.2.4
-DOOM_ROOT=libs/doomgeneric/doomgeneric
+# DOOM_ROOT=libs/doomgeneric/doomgeneric
+DOOM_ROOT=libs/embeddedDOOM/src
 SDL_ROOT=libs/SDL
 SDL_MIXER_ROOT=libs/SDL-Mixer-X
 ADLMIDI_ROOT=libs/libADLMIDI
 LIBCXX_ROOT=libs/libcxx
 DLMALLOC_ROOT=libs/dlmalloc
 
+
 mkdir -p output
 rm -f output/doom.elf
 
-/opt/clang-rv32e/bin/clang \
+# riscv32-unknown-elf-g++ \
+#     -std=c++20 \
+#     -march=rv32em -mabi=ilp32e -nostdlib -nodefaultlibs \
+/opt/clang-rv32i/bin/clang \
     -Wl,--error-limit=0 \
-    --target=riscv32 -march=rv32em -mabi=ilp32e -nostdlib -nodefaultlibs \
+    --target=riscv32 -march=rv32i -mabi=ilp32 -nostdlib -nodefaultlibs \
     -Wl,--emit-relocs \
     -Wl,--no-relax \
     -mrelax \
@@ -26,7 +31,8 @@ rm -f output/doom.elf
     -g3 \
     -O3 \
     -fdebug-prefix-map=$PWD=polkadoom \
-    -fdebug-prefix-map=/opt/clang-rv32e=/usr \
+    -fdebug-prefix-map=/opt/clang-rv32i=/usr \
+    -Tlink.x \
     -Isrc/include \
     -I$SDL_ROOT/include \
     -I$SDL_MIXER_ROOT/include \
@@ -39,6 +45,7 @@ rm -f output/doom.elf
     -I$MUSL_ROOT/src/internal \
     -I$MUSL_ROOT/src/multibyte \
     -I$MUSL_ROOT/arch/generic \
+    -DDISABLE_NETWORK \
     -DHAVE_STDIO_H \
     -DHAVE_O_CLOEXEC \
     -DDYNAPI_NEEDS_DLOPEN=1 \
@@ -68,10 +75,7 @@ rm -f output/doom.elf
     -Wno-string-plus-int \
     -fno-exceptions \
     -fno-rtti \
-    /opt/clang-rv32e/lib/linux/libclang_rt.builtins-riscv32.a \
-    src/impl.c \
-    src/impl_dummy_libc.c \
-    src/impl_dummy_sdl.c \
+    /opt/clang-rv32i/lib/linux/libclang_rt.builtins-riscv32.a \
     $DLMALLOC_ROOT/malloc.c \
     $LIBCXX_ROOT/src/new.cpp \
     $LIBCXX_ROOT/src/new_helpers.cpp \
@@ -121,6 +125,7 @@ rm -f output/doom.elf
     $MUSL_ROOT/src/exit/assert.c \
     $MUSL_ROOT/src/string/strspn.c \
     $MUSL_ROOT/src/string/strcspn.c \
+    $MUSL_ROOT/src/string/strlcpy.c \
     $MUSL_ROOT/src/string/strlen.c \
     $MUSL_ROOT/src/string/strcasecmp.c \
     $MUSL_ROOT/src/string/strchr.c \
@@ -133,7 +138,6 @@ rm -f output/doom.elf
     $MUSL_ROOT/src/string/strrchr.c \
     $MUSL_ROOT/src/string/strstr.c \
     $MUSL_ROOT/src/string/strnlen.c \
-    $MUSL_ROOT/src/string/strlcpy.c \
     $MUSL_ROOT/src/string/stpncpy.c \
     $MUSL_ROOT/src/string/strtok_r.c \
     $MUSL_ROOT/src/string/memset.c \
@@ -166,6 +170,7 @@ rm -f output/doom.elf
     $MUSL_ROOT/src/stdio/stderr.c \
     $MUSL_ROOT/src/stdio/stdin.c \
     $MUSL_ROOT/src/stdio/stdout.c \
+    $MUSL_ROOT/src/stdio/sprintf.c \
     $MUSL_ROOT/src/stdio/snprintf.c \
     $MUSL_ROOT/src/stdio/vsnprintf.c \
     $MUSL_ROOT/src/stdio/vfprintf.c \
@@ -252,87 +257,157 @@ rm -f output/doom.elf
     $MUSL_ROOT/src/internal/intscan.c \
     $MUSL_ROOT/src/internal/libc.c \
     $MUSL_ROOT/src/internal/syscall_ret.c \
-    $DOOM_ROOT/i_sdlsound.c \
-    $DOOM_ROOT/i_sdlmusic.c \
-    $DOOM_ROOT/dummy.c \
-    $DOOM_ROOT/am_map.c \
+    $DOOM_ROOT/i_video.c \
     $DOOM_ROOT/doomdef.c \
     $DOOM_ROOT/doomstat.c \
     $DOOM_ROOT/dstrings.c \
-    $DOOM_ROOT/d_event.c \
-    $DOOM_ROOT/d_items.c \
-    $DOOM_ROOT/d_iwad.c \
-    $DOOM_ROOT/d_loop.c \
-    $DOOM_ROOT/d_main.c \
-    $DOOM_ROOT/d_mode.c \
-    $DOOM_ROOT/d_net.c \
-    $DOOM_ROOT/f_finale.c \
-    $DOOM_ROOT/f_wipe.c \
-    $DOOM_ROOT/g_game.c \
-    $DOOM_ROOT/hu_lib.c \
-    $DOOM_ROOT/hu_stuff.c \
-    $DOOM_ROOT/info.c \
-    $DOOM_ROOT/i_cdmus.c \
-    $DOOM_ROOT/i_endoom.c \
-    $DOOM_ROOT/i_joystick.c \
-    $DOOM_ROOT/i_scale.c \
-    $DOOM_ROOT/i_sound.c \
-    $DOOM_ROOT/i_system.c \
-    $DOOM_ROOT/i_timer.c \
-    $DOOM_ROOT/memio.c \
-    $DOOM_ROOT/m_argv.c \
-    $DOOM_ROOT/m_bbox.c \
-    $DOOM_ROOT/m_cheat.c \
-    $DOOM_ROOT/m_config.c \
-    $DOOM_ROOT/m_controls.c \
-    $DOOM_ROOT/m_fixed.c \
-    $DOOM_ROOT/m_menu.c \
-    $DOOM_ROOT/m_misc.c \
-    $DOOM_ROOT/m_random.c \
-    $DOOM_ROOT/p_ceilng.c \
-    $DOOM_ROOT/p_doors.c \
-    $DOOM_ROOT/p_enemy.c \
-    $DOOM_ROOT/p_floor.c \
-    $DOOM_ROOT/p_inter.c \
-    $DOOM_ROOT/p_lights.c \
-    $DOOM_ROOT/p_map.c \
-    $DOOM_ROOT/p_maputl.c \
-    $DOOM_ROOT/p_mobj.c \
-    $DOOM_ROOT/p_plats.c \
-    $DOOM_ROOT/p_pspr.c \
-    $DOOM_ROOT/p_saveg.c \
-    $DOOM_ROOT/p_setup.c \
-    $DOOM_ROOT/p_sight.c \
-    $DOOM_ROOT/p_spec.c \
-    $DOOM_ROOT/p_switch.c \
-    $DOOM_ROOT/p_telept.c \
-    $DOOM_ROOT/p_tick.c \
-    $DOOM_ROOT/p_user.c \
-    $DOOM_ROOT/r_bsp.c \
-    $DOOM_ROOT/r_data.c \
-    $DOOM_ROOT/r_draw.c \
-    $DOOM_ROOT/r_main.c \
-    $DOOM_ROOT/r_plane.c \
-    $DOOM_ROOT/r_segs.c \
-    $DOOM_ROOT/r_sky.c \
-    $DOOM_ROOT/r_things.c \
-    $DOOM_ROOT/sha1.c \
-    $DOOM_ROOT/sounds.c \
-    $DOOM_ROOT/statdump.c \
-    $DOOM_ROOT/st_lib.c \
-    $DOOM_ROOT/st_stuff.c \
-    $DOOM_ROOT/s_sound.c \
-    $DOOM_ROOT/tables.c \
-    $DOOM_ROOT/v_video.c \
-    $DOOM_ROOT/wi_stuff.c \
-    $DOOM_ROOT/w_checksum.c \
-    $DOOM_ROOT/w_file.c \
-    $DOOM_ROOT/w_main.c \
-    $DOOM_ROOT/w_wad.c \
-    $DOOM_ROOT/z_zone.c \
-    $DOOM_ROOT/w_file_stdc.c \
-    $DOOM_ROOT/i_input.c \
-    $DOOM_ROOT/i_video.c \
-    $DOOM_ROOT/doomgeneric.c \
-    $DOOM_ROOT/mus2mid.c \
+    $DOOM_ROOT/i_system.c		\
+    $DOOM_ROOT/tables.c			\
+    $DOOM_ROOT/f_finale.c		\
+    $DOOM_ROOT/f_wipe.c 		\
+    $DOOM_ROOT/d_main.c			\
+    $DOOM_ROOT/d_items.c		\
+    $DOOM_ROOT/g_game.c			\
+    $DOOM_ROOT/m_menu.c			\
+    $DOOM_ROOT/m_misc.c			\
+    $DOOM_ROOT/m_argv.c  		\
+    $DOOM_ROOT/m_bbox.c			\
+    $DOOM_ROOT/m_fixed.c		\
+    $DOOM_ROOT/m_swap.c			\
+    $DOOM_ROOT/m_cheat.c		\
+    $DOOM_ROOT/m_random.c		\
+    $DOOM_ROOT/am_map.c			\
+    $DOOM_ROOT/p_ceilng.c		\
+    $DOOM_ROOT/p_doors.c		\
+    $DOOM_ROOT/p_enemy.c		\
+    $DOOM_ROOT/p_floor.c		\
+    $DOOM_ROOT/p_inter.c		\
+    $DOOM_ROOT/p_lights.c		\
+    $DOOM_ROOT/p_map.c			\
+    $DOOM_ROOT/p_maputl.c		\
+    $DOOM_ROOT/p_plats.c		\
+    $DOOM_ROOT/p_pspr.c			\
+    $DOOM_ROOT/p_setup.c		\
+    $DOOM_ROOT/p_sight.c		\
+    $DOOM_ROOT/p_spec.c			\
+    $DOOM_ROOT/p_switch.c		\
+    $DOOM_ROOT/p_mobj.c			\
+    $DOOM_ROOT/p_telept.c		\
+    $DOOM_ROOT/p_tick.c			\
+    $DOOM_ROOT/p_saveg.c		\
+    $DOOM_ROOT/p_user.c			\
+    $DOOM_ROOT/r_bsp.c			\
+    $DOOM_ROOT/r_data.c			\
+    $DOOM_ROOT/r_draw.c			\
+    $DOOM_ROOT/r_main.c			\
+    $DOOM_ROOT/r_plane.c		\
+    $DOOM_ROOT/r_segs.c			\
+    $DOOM_ROOT/r_sky.c			\
+    $DOOM_ROOT/r_things.c		\
+    $DOOM_ROOT/w_wad.c			\
+    $DOOM_ROOT/wi_stuff.c		\
+    $DOOM_ROOT/v_video.c		\
+    $DOOM_ROOT/st_lib.c			\
+    $DOOM_ROOT/st_stuff.c		\
+    $DOOM_ROOT/hu_stuff.c		\
+    $DOOM_ROOT/hu_lib.c			\
+    $DOOM_ROOT/z_zone.c			\
+    $DOOM_ROOT/info.c				\
+    $DOOM_ROOT/i_net.c			\
+    $DOOM_ROOT/d_net.c			\
+    $DOOM_ROOT/stubs.c    \
+    $DOOM_ROOT/sounds.c	\
+    $DOOM_ROOT/s_sound.c		\
+    $DOOM_ROOT/i_sound.c        \
+    $DOOM_ROOT/support/baked_texture_data.c \
+    $DOOM_ROOT/support/baked_map_data.c \
+    $DOOM_ROOT/support/rawwad_use.c \
+    $DOOM_ROOT/i_main.c \
+    $DOOM_ROOT/startup.s \
+    src/impl_dummy_libc.c \
+    src/impl_dummy_sdl.c \
+    src/impl.c \
     -o output/doom.elf
+    # $DOOM_ROOT/i_sdlsound.c \
+    # $DOOM_ROOT/i_sdlmusic.c \
+    # $DOOM_ROOT/dummy.c \
+    # $DOOM_ROOT/am_map.c \
+    # $DOOM_ROOT/doomdef.c \
+    # $DOOM_ROOT/doomstat.c \
+    # $DOOM_ROOT/dstrings.c \
+    # $DOOM_ROOT/d_event.c \
+    # $DOOM_ROOT/d_items.c \
+    # $DOOM_ROOT/d_iwad.c \
+    # $DOOM_ROOT/d_loop.c \
+    # $DOOM_ROOT/d_main.c \
+    # $DOOM_ROOT/d_mode.c \
+    # $DOOM_ROOT/d_net.c \
+    # $DOOM_ROOT/f_finale.c \
+    # $DOOM_ROOT/f_wipe.c \
+    # $DOOM_ROOT/g_game.c \
+    # $DOOM_ROOT/hu_lib.c \
+    # $DOOM_ROOT/hu_stuff.c \
+    # $DOOM_ROOT/info.c \
+    # $DOOM_ROOT/i_cdmus.c \
+    # $DOOM_ROOT/i_endoom.c \
+    # $DOOM_ROOT/i_joystick.c \
+    # $DOOM_ROOT/i_scale.c \
+    # $DOOM_ROOT/i_sound.c \
+    # $DOOM_ROOT/i_system.c \
+    # $DOOM_ROOT/i_timer.c \
+    # $DOOM_ROOT/memio.c \
+    # $DOOM_ROOT/m_argv.c \
+    # $DOOM_ROOT/m_bbox.c \
+    # $DOOM_ROOT/m_cheat.c \
+    # $DOOM_ROOT/m_config.c \
+    # $DOOM_ROOT/m_controls.c \
+    # $DOOM_ROOT/m_fixed.c \
+    # $DOOM_ROOT/m_menu.c \
+    # $DOOM_ROOT/m_misc.c \
+    # $DOOM_ROOT/m_random.c \
+    # $DOOM_ROOT/p_ceilng.c \
+    # $DOOM_ROOT/p_doors.c \
+    # $DOOM_ROOT/p_enemy.c \
+    # $DOOM_ROOT/p_floor.c \
+    # $DOOM_ROOT/p_inter.c \
+    # $DOOM_ROOT/p_lights.c \
+    # $DOOM_ROOT/p_map.c \
+    # $DOOM_ROOT/p_maputl.c \
+    # $DOOM_ROOT/p_mobj.c \
+    # $DOOM_ROOT/p_plats.c \
+    # $DOOM_ROOT/p_pspr.c \
+    # $DOOM_ROOT/p_saveg.c \
+    # $DOOM_ROOT/p_setup.c \
+    # $DOOM_ROOT/p_sight.c \
+    # $DOOM_ROOT/p_spec.c \
+    # $DOOM_ROOT/p_switch.c \
+    # $DOOM_ROOT/p_telept.c \
+    # $DOOM_ROOT/p_tick.c \
+    # $DOOM_ROOT/p_user.c \
+    # $DOOM_ROOT/r_bsp.c \
+    # $DOOM_ROOT/r_data.c \
+    # $DOOM_ROOT/r_draw.c \
+    # $DOOM_ROOT/r_main.c \
+    # $DOOM_ROOT/r_plane.c \
+    # $DOOM_ROOT/r_segs.c \
+    # $DOOM_ROOT/r_sky.c \
+    # $DOOM_ROOT/r_things.c \
+    # $DOOM_ROOT/sha1.c \
+    # $DOOM_ROOT/sounds.c \
+    # $DOOM_ROOT/statdump.c \
+    # $DOOM_ROOT/st_lib.c \
+    # $DOOM_ROOT/st_stuff.c \
+    # $DOOM_ROOT/s_sound.c \
+    # $DOOM_ROOT/tables.c \
+    # $DOOM_ROOT/v_video.c \
+    # $DOOM_ROOT/wi_stuff.c \
+    # $DOOM_ROOT/w_checksum.c \
+    # $DOOM_ROOT/w_file.c \
+    # $DOOM_ROOT/w_main.c \
+    # $DOOM_ROOT/w_wad.c \
+    # $DOOM_ROOT/z_zone.c \
+    # $DOOM_ROOT/w_file_stdc.c \
+    # $DOOM_ROOT/i_input.c \
+    # $DOOM_ROOT/i_video.c \
+    # $DOOM_ROOT/doomgeneric.c \
+    # $DOOM_ROOT/mus2mid.c \
